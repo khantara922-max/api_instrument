@@ -34,9 +34,13 @@ export default {
       resp = await fetch(parsed.href, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-          'Referer': parsed.origin + '/',
+          'Referer': parsed.href,
+          'Origin': parsed.origin,
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
           'Accept-Language': 'en-US,en;q=0.5',
+          'sec-fetch-dest': 'iframe',
+          'sec-fetch-mode': 'navigate',
+          'sec-fetch-site': 'cross-site',
         },
       });
     } catch (e) {
@@ -48,10 +52,12 @@ export default {
 
     const body = await resp.text();
 
+    // always return 200 to caller, pass upstream status in header
     return new Response(body, {
-      status: resp.status,
+      status: 200,
       headers: {
         'Content-Type': resp.headers.get('Content-Type') || 'text/plain',
+        'X-Upstream-Status': String(resp.status),
         ...corsHeaders(origin),
       },
     });
